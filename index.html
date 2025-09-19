@@ -33,15 +33,21 @@
         .tab-content.active {
             display: block;
         }
-        /* 차트 컨테이너 크기 고정 */
-        .chart-container {
+        /* 차트 컨테이너 크기 완전 고정 */
+        .chart-wrapper {
             position: relative;
             height: 300px;
             width: 100%;
+            overflow: hidden;
         }
-        .chart-container canvas {
-            max-height: 300px !important;
+        .chart-wrapper canvas {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
             height: 300px !important;
+            max-width: 100% !important;
+            max-height: 300px !important;
         }
     </style>
 </head>
@@ -150,15 +156,15 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-lg font-semibold mb-4">월별 혜택 성과</h3>
-                    <div class="chart-container">
-                        <canvas id="performanceChart"></canvas>
+                    <div class="chart-wrapper">
+                        <canvas id="performanceChart" width="400" height="300"></canvas>
                     </div>
                 </div>
                 
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-lg font-semibold mb-4">서비스별 혜택 사용 분포</h3>
-                    <div class="chart-container">
-                        <canvas id="distributionChart"></canvas>
+                    <div class="chart-wrapper">
+                        <canvas id="distributionChart" width="400" height="300"></canvas>
                     </div>
                 </div>
             </div>
@@ -381,8 +387,8 @@
                     
                     <div>
                         <h4 class="text-lg font-semibold mb-4">ROI 분석</h4>
-                        <div class="chart-container">
-                            <canvas id="roiChart"></canvas>
+                        <div class="chart-wrapper">
+                            <canvas id="roiChart" width="400" height="300"></canvas>
                         </div>
                     </div>
                 </div>
@@ -408,7 +414,8 @@
                         <div class="border border-gray-200 rounded-lg p-4">
                             <h4 class="font-semibold mb-2">정산 대기</h4>
                             <p class="text-2xl font-bold text-orange-600">23건</p>
-                            <p class="text-sm text-gray-500">자동 처리 예정</p>
+                            <p class="text-sm text-gray-
+                                <p class="text-sm text-gray-500">자동 처리 예정</p>
                         </div>
                     </div>
                     
@@ -439,6 +446,7 @@
         // 전역 변수
         let selectedLogic = null;
         let selectedConditions = [];
+        let chartsCreated = false;
 
         // 샘플 데이터
         const benefitData = [
@@ -509,7 +517,12 @@
             
             // 탭별 초기화
             if (tabName === 'dashboard') {
-                setTimeout(initCharts, 100);
+                setTimeout(function() {
+                    if (!chartsCreated) {
+                        initCharts();
+                        chartsCreated = true;
+                    }
+                }, 100);
             } else if (tabName === 'benefits') {
                 renderBenefitsTable();
             } else if (tabName === 'create') {
@@ -716,12 +729,20 @@
             }
         }
 
-        // 차트 초기화 - 크기 고정
+        // 차트 초기화 - 완전 고정 크기
         function initCharts() {
             // 성과 차트
-            const performanceCtx = document.getElementById('performanceChart');
-            if (performanceCtx && !performanceCtx.chartInstance) {
-                performanceCtx.chartInstance = new Chart(performanceCtx, {
+            const performanceCanvas = document.getElementById('performanceChart');
+            if (performanceCanvas && !window.performanceChart) {
+                const ctx = performanceCanvas.getContext('2d');
+                
+                // 캔버스 크기 강제 설정
+                performanceCanvas.width = 400;
+                performanceCanvas.height = 300;
+                performanceCanvas.style.width = '100%';
+                performanceCanvas.style.height = '300px';
+                
+                window.performanceChart = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: ['1월', '2월', '3월', '4월', '5월'],
@@ -742,7 +763,7 @@
                         }]
                     },
                     options: {
-                        responsive: true,
+                        responsive: false,
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
@@ -759,9 +780,17 @@
             }
 
             // 분포 차트
-            const distributionCtx = document.getElementById('distributionChart');
-            if (distributionCtx && !distributionCtx.chartInstance) {
-                distributionCtx.chartInstance = new Chart(distributionCtx, {
+            const distributionCanvas = document.getElementById('distributionChart');
+            if (distributionCanvas && !window.distributionChart) {
+                const ctx = distributionCanvas.getContext('2d');
+                
+                // 캔버스 크기 강제 설정
+                distributionCanvas.width = 400;
+                distributionCanvas.height = 300;
+                distributionCanvas.style.width = '100%';
+                distributionCanvas.style.height = '300px';
+                
+                window.distributionChart = new Chart(ctx, {
                     type: 'pie',
                     data: {
                         labels: ['결제', '카드', '증권', '멤버십'],
@@ -771,7 +800,7 @@
                         }]
                     },
                     options: {
-                        responsive: true,
+                        responsive: false,
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
@@ -785,9 +814,17 @@
 
         // ROI 차트 초기화
         function initROIChart() {
-            const roiCtx = document.getElementById('roiChart');
-            if (roiCtx && !roiCtx.chartInstance) {
-                roiCtx.chartInstance = new Chart(roiCtx, {
+            const roiCanvas = document.getElementById('roiChart');
+            if (roiCanvas && !window.roiChart) {
+                const ctx = roiCanvas.getContext('2d');
+                
+                // 캔버스 크기 강제 설정
+                roiCanvas.width = 400;
+                roiCanvas.height = 300;
+                roiCanvas.style.width = '100%';
+                roiCanvas.style.height = '300px';
+                
+                window.roiChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: ['결제', '카드', '증권', '멤버십'],
@@ -798,7 +835,7 @@
                         }]
                     },
                     options: {
-                        responsive: true,
+                        responsive: false,
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
@@ -843,10 +880,11 @@
                 }
             });
 
-            // 초기 차트 로드
+            // 초기 로드시 차트 생성
             setTimeout(function() {
                 initCharts();
-            }, 100);
+                chartsCreated = true;
+            }, 500);
         });
     </script>
 </body>
