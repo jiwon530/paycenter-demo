@@ -33,6 +33,16 @@
         .tab-content.active {
             display: block;
         }
+        /* 차트 컨테이너 크기 고정 */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .chart-container canvas {
+            max-height: 300px !important;
+            height: 300px !important;
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gray-100">
@@ -140,12 +150,16 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-lg font-semibold mb-4">월별 혜택 성과</h3>
-                    <canvas id="performanceChart"></canvas>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
                 </div>
                 
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-lg font-semibold mb-4">서비스별 혜택 사용 분포</h3>
-                    <canvas id="distributionChart"></canvas>
+                    <div class="chart-container">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -367,7 +381,9 @@
                     
                     <div>
                         <h4 class="text-lg font-semibold mb-4">ROI 분석</h4>
-                        <canvas id="roiChart"></canvas>
+                        <div class="chart-container">
+                            <canvas id="roiChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -404,8 +420,7 @@
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">서비스</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">이번달 지출</th>
-                                        <th class="px-6 py-
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">예산 대비</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">예산 대비</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">상태</th>
                                     </tr>
                                 </thead>
@@ -701,12 +716,12 @@
             }
         }
 
-        // 차트 초기화
+        // 차트 초기화 - 크기 고정
         function initCharts() {
             // 성과 차트
             const performanceCtx = document.getElementById('performanceChart');
             if (performanceCtx && !performanceCtx.chartInstance) {
-                performanceCtx.chartInstance = new Chart(performanceCtx.getContext('2d'), {
+                performanceCtx.chartInstance = new Chart(performanceCtx, {
                     type: 'line',
                     data: {
                         labels: ['1월', '2월', '3월', '4월', '5월'],
@@ -741,13 +756,12 @@
                         }
                     }
                 });
-                performanceCtx.style.height = '300px';
             }
 
             // 분포 차트
             const distributionCtx = document.getElementById('distributionChart');
             if (distributionCtx && !distributionCtx.chartInstance) {
-                distributionCtx.chartInstance = new Chart(distributionCtx.getContext('2d'), {
+                distributionCtx.chartInstance = new Chart(distributionCtx, {
                     type: 'pie',
                     data: {
                         labels: ['결제', '카드', '증권', '멤버십'],
@@ -761,12 +775,11 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'right'
+                                position: 'bottom'
                             }
                         }
                     }
                 });
-                distributionCtx.style.height = '300px';
             }
         }
 
@@ -774,7 +787,7 @@
         function initROIChart() {
             const roiCtx = document.getElementById('roiChart');
             if (roiCtx && !roiCtx.chartInstance) {
-                roiCtx.chartInstance = new Chart(roiCtx.getContext('2d'), {
+                roiCtx.chartInstance = new Chart(roiCtx, {
                     type: 'bar',
                     data: {
                         labels: ['결제', '카드', '증권', '멤버십'],
@@ -787,6 +800,11 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
                         scales: {
                             y: {
                                 beginAtZero: true
@@ -794,7 +812,6 @@
                         }
                     }
                 });
-                roiCtx.style.height = '300px';
             }
         }
 
@@ -826,7 +843,7 @@
                 }
             });
 
-            // 초기 탭 설정 및 차트 초기화
+            // 초기 차트 로드
             setTimeout(function() {
                 initCharts();
             }, 100);
