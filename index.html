@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>페이센터 — 데모 (GitHub Pages 안전판)</title>
+    <title>페이센터 — 데모</title>
 
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,10 +12,13 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 
+    <!-- React Router DOM UMD (v6) -->
+    <script src="https://unpkg.com/react-router-dom@6/umd/react-router-dom.production.min.js" crossorigin></script>
+
     <!-- Recharts UMD -->
     <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
 
-    <!-- Babel (브라우저 JSX 변환) -->
+    <!-- Babel (브라우저에서 JSX 변환) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
@@ -30,27 +33,20 @@
   <body>
     <div id="root"></div>
 
-    <!-- 앱 코드 (프리셋/플러그인 명시, ?. 제거) -->
+    <!-- 앱 코드: JSX -> Babel 변환 (preset/plug-in 명시) -->
     <script type="text/babel"
             data-presets="env,react"
-            data-plugins="proposal-optional-chaining,proposal-nullish-coalescing-operator,proposal-object-rest-spread">
-      // ====== 안전진단 배너 ======
+            data-plugins="proposal-object-rest-spread,proposal-nullish-coalescing-operator,proposal-optional-chaining">
+      // ===== 오류 배너(문제 시 상단 표시) =====
       window.onerror = function(msg, src, line, col) {
-        try {
-          const el = document.createElement('div');
-          el.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#fee;border-bottom:1px solid #f99;color:#b00;padding:8px 12px;font:12px/1.4 ui-sans-serif,system-ui";
-          el.textContent = "Script error: " + msg + " @" + line + ":" + col;
-          document.body.prepend(el);
-        } catch(_) {}
-      };
-      window.addEventListener('unhandledrejection', function(e){
         const el = document.createElement('div');
-        el.style.cssText = "position:fixed;top:32px;left:0;right:0;z-index:9999;background:#eef;border-bottom:1px solid #99f;color:#00b;padding:8px 12px;font:12px/1.4 ui-sans-serif,system-ui";
-        el.textContent = "Promise rejection: " + (e.reason && (e.reason.message || e.reason)) ;
+        el.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#fee;border-bottom:1px solid #f99;color:#b00;padding:8px 12px;font:12px/1.4 ui-sans-serif,system-ui";
+        el.textContent = "Script error: " + msg + " @" + line + ":" + col;
         document.body.prepend(el);
-      });
+      };
 
       const { useState } = React;
+      const { BrowserRouter, Routes, Route, Link, Outlet, useLocation, Navigate } = ReactRouterDOM;
       const {
         BarChart: RBarChart, Bar,
         LineChart: RLineChart, Line,
@@ -58,55 +54,175 @@
         PieChart, Pie, Cell, ResponsiveContainer
       } = Recharts;
 
-      // lucide 정적 SVG (이미지 404는 앱 렌더링과 무관)
-      function ico(name, cls) {
-        return React.createElement("img", {
-          alt: name,
-          className: "icon " + (cls || ""),
-          src: "https://unpkg.com/lucide-static@latest/icons/" + name + ".svg"
-        });
-      }
+      // lucide 정적 SVG
+      const ico = (name, cls="icon") =>
+        <img alt={name} className={cls}
+             src={"https://unpkg.com/lucide-static@latest/icons/" + name + ".svg"} />;
 
-      function StatusBadge(props){
-        var status = props.status;
-        var map = {
-          active:  ["진행중", "bg-green-100 text-green-800"],
-          paused:  ["일시정지", "bg-yellow-100 text-yellow-800"],
-          scheduled:["예약됨", "bg-blue-100 text-blue-800"],
-          ended:   ["종료", "bg-gray-100 text-gray-800"]
-        };
-        var m = map[status] || ["-", "bg-gray-100 text-gray-800"];
-        return React.createElement("span", { className: "px-2 py-1 rounded-full text-xs font-medium " + m[1] }, m[0]);
-      }
-
-      var benefitData = [
+      // 전역 데이터
+      const benefitData = [
         { name: "신규가입 10% 할인", status: "active", budget: 50000000, used: 32000000, conversion: 8.5, type: "정률할인" },
         { name: "첫결제 캐시백",    status: "active", budget: 30000000, used: 28500000, conversion: 12.3, type: "캐시백" },
         { name: "VIP 무료송금",     status: "paused", budget: 20000000, used: 15000000, conversion: 6.7, type: "수수료면제" },
-        { name: "여름 특가 쿠폰",   status: "scheduled", budget: 40000000, used: 0, conversion: 0, type: "정액할인" }
+        { name: "여름 특가 쿠폰",   status: "scheduled", budget: 40000000, used: 0, conversion: 0, type: "정액할인" },
       ];
-
-      var performanceData = [
+      const performanceData = [
         { month: "1월", 발급: 45000, 사용: 38000, 전환율: 8.4 },
         { month: "2월", 발급: 52000, 사용: 44000, 전환율: 8.8 },
         { month: "3월", 발급: 48000, 사용: 42000, 전환율: 9.2 },
         { month: "4월", 발급: 58000, 사용: 51000, 전환율: 9.6 },
-        { month: "5월", 발급: 62000, 사용: 56000, 전환율: 10.1 }
+        { month: "5월", 발급: 62000, 사용: 56000, 전환율: 10.1 },
       ];
-
-      var serviceDistribution = [
+      const serviceDistribution = [
         { name: "결제", value: 45, color: "#4CAF50" },
         { name: "카드", value: 25, color: "#FF9800" },
         { name: "증권", value: 20, color: "#2196F3" },
-        { name: "멤버십", value: 10, color: "#9C27B0" }
+        { name: "멤버십", value: 10, color: "#9C27B0" },
       ];
 
-      function BenefitCreator(){
-        var _useState = useState(null), selectedLogic = _useState[0], setSelectedLogic = _useState[1];
-        var _useState2 = useState([]), selectedConditions = _useState2[0], setSelectedConditions = _useState2[1];
-        var _useState3 = useState(false), showExt = _useState3[0], setShowExt = _useState3[1];
+      const StatusBadge = ({status}) => {
+        const map = {
+          active:  ["진행중", "bg-green-100 text-green-800"],
+          paused:  ["일시정지", "bg-yellow-100 text-yellow-800"],
+          scheduled:["예약됨", "bg-blue-100 text-blue-800"],
+          ended:   ["종료", "bg-gray-100 text-gray-800"],
+        }[status] || ["-", "bg-gray-100 text-gray-800"];
+        return <span className={"px-2 py-1 rounded-full text-xs font-medium " + map[1]}>{map[0]}</span>;
+      };
 
-        var logicBlocks = [
+      // --------- 페이지들 ---------
+      function Dashboard() {
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                ["활성 혜택", "12", "play", "icon-green", "bg-green-100"],
+                ["월 예산 소진율", "73%", "bar-chart-3", "icon-orange", "bg-orange-100"],
+                ["평균 전환율", "9.2%", "line-chart", "icon-blue", "bg-blue-100"],
+                ["이번달 절약", "4.2억", "download", "icon-purple", "bg-purple-100"],
+              ].map(([label, value, iname, icls, box], i) => (
+                <div key={i} className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-600">{label}</p>
+                      <p className="text-2xl font-bold text-gray-900">{value}</p>
+                    </div>
+                    <div className={"w-8 h-8 rounded-lg flex items-center justify-center " + box}>
+                      {ico(iname, "icon " + icls)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold mb-4">월별 혜택 성과</h3>
+                <div style={{width:"100%", height:300}}>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RLineChart data={performanceData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="발급" stroke="#4CAF50" strokeWidth={2} />
+                      <Line type="monotone" dataKey="사용" stroke="#2196F3" strokeWidth={2} />
+                    </RLineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold mb-4">서비스별 혜택 사용 분포</h3>
+                <div style={{width:"100%", height:300}}>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie data={serviceDistribution} cx="50%" cy="50%" outerRadius={80} dataKey="value"
+                           label={({name, value}) => name + " " + value + "%"}>
+                        {serviceDistribution.map((e,i) => <Cell key={i} fill={e.color} />)}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      function Benefits() {
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-4">
+                {ico("filter", "icon icon-gray")}
+                <select className="border border-gray-300 rounded-lg px-3 py-2">
+                  <option>전체 상태</option><option>진행중</option><option>일시정지</option><option>예약됨</option>
+                </select>
+                <select className="border border-gray-300 rounded-lg px-3 py-2">
+                  <option>전체 서비스</option><option>결제</option><option>카드</option><option>증권</option>
+                </select>
+              </div>
+              <Link to="../create"
+                className="flex items-center space-x-2 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600">
+                {ico("plus", "icon")}
+                <span>새 혜택</span>
+              </Link>
+            </div>
+
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">혜택명</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">예산 사용률</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">전환율</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {benefitData.map((b, i) => (
+                    <tr key={i} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{b.name}</div>
+                          <div className="text-sm text-gray-500">{b.type}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={b.status} /></td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-1">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div className="bg-amber-600 h-2 rounded-full" style={{width: (b.used/b.budget*100)+"%"}}></div>
+                            </div>
+                          </div>
+                          <span className="ml-2 text-sm text-gray-500">{Math.round(b.used/b.budget*100)}%</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{b.conversion}%</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <button className="text-amber-600 hover:text-amber-900">{ico("eye", "icon")}</button>
+                        <button className="text-gray-600 hover:text-gray-900">{ico("edit-3", "icon")}</button>
+                        <button className="text-yellow-600 hover:text-yellow-900">{ico("pause", "icon")}</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      }
+
+      function BenefitCreator() {
+        const [selectedLogic, setSelectedLogic] = useState(null);
+        const [selectedConditions, setSelectedConditions] = useState([]);
+        const [showExt, setShowExt] = useState(false);
+
+        const logicBlocks = [
           { id: "discount_percent", name: "정률 할인", desc: "10% 할인",  color: "bg-yellow-100 border-yellow-300", phase: 1 },
           { id: "discount_fixed",   name: "정액 할인", desc: "2000원 할인", color: "bg-yellow-100 border-yellow-300", phase: 1 },
           { id: "cashback",         name: "캐시백",     desc: "3% 적립",    color: "bg-yellow-100 border-yellow-300", phase: 1 },
@@ -114,25 +230,22 @@
           { id: "coupon",           name: "쿠폰 발급",  desc: "할인쿠폰 자동 발급", color: "bg-yellow-100 border-yellow-300", phase: 1 },
           { id: "fee_waiver",       name: "수수료 면제", desc: "송금 수수료 면제", color: "bg-yellow-100 border-yellow-300", phase: 1 },
           { id: "tier_discount",    name: "등급별 할인", desc: "구매횟수별 차등 할인", color: "bg-yellow-100 border-yellow-300", phase: 2 },
-          { id: "bundle_discount",  name: "묶음 할인",  desc: "복합 서비스 이용 할인", color: "bg-yellow-100 border-yellow-300", phase: 2 }
+          { id: "bundle_discount",  name: "묶음 할인",  desc: "복합 서비스 이용 할인", color: "bg-yellow-100 border-yellow-300", phase: 2 },
         ];
-
-        var conditionBlocks = [
+        const conditionBlocks = [
           { id: "amount", name: "최소 금액", desc: "30,000원 이상", phase: 1 },
           { id: "location", name: "사용 장소", desc: "편의점", phase: 1 },
           { id: "time", name: "시간 조건", desc: "오후 2-4시", phase: 1 },
           { id: "user_type", name: "사용자 조건", desc: "신규 가입자", phase: 1 },
           { id: "frequency", name: "사용 횟수", desc: "월 3회 이상", phase: 2 },
           { id: "day_of_week", name: "요일 조건", desc: "금요일만", phase: 2 },
-          { id: "category_exclude", name: "카테고리 제외", desc: "담배/주류 제외", phase: 2 }
+          { id: "category_exclude", name: "카테고리 제외", desc: "담배/주류 제외", phase: 2 },
         ];
+        const currentPhase = 2;
 
-        var currentPhase = 2;
-
-        function onToggleCondition(cond, checked){
-          if (checked) setSelectedConditions(selectedConditions.concat([cond]));
-          else setSelectedConditions(selectedConditions.filter(function(c){ return c.id !== cond.id; }));
-        }
+        const toggle = (cond, on) => {
+          setSelectedConditions(prev => on ? [...prev, cond] : prev.filter(c => c.id !== cond.id));
+        };
 
         return (
           <div className="space-y-6">
@@ -151,32 +264,28 @@
               <div className="col-span-2 bg-white rounded-lg shadow-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-lg font-bold">1단계: 기본 혜택 로직 선택</h4>
-                  <button onClick={function(){ setShowExt(!showExt); }}
-                          className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded">확장 관리</button>
+                  <button onClick={() => setShowExt(!showExt)} className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded">확장 관리</button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  {logicBlocks.map(function(block){
-                    var isSel = (selectedLogic && selectedLogic.id === block.id);
-                    return (
-                      <div key={block.id}
-                           onClick={function(){ setSelectedLogic(block); }}
-                           className={"p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md relative " +
-                                      (isSel ? (block.color + " border-opacity-100 shadow-lg") : "border-gray-200 hover:border-gray-300")}>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h5 className="font-bold mb-1">{block.name}</h5>
-                            <p className="text-sm text-gray-600">{block.desc}</p>
-                          </div>
-                          <span className={"text-xs px-2 py-1 rounded-full " + (block.phase === 1 ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700")}>P{block.phase}</span>
+                  {logicBlocks.map(block => (
+                    <div key={block.id}
+                         onClick={() => setSelectedLogic(block)}
+                         className={"p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md relative " +
+                           (selectedLogic && selectedLogic.id === block.id ? block.color + " border-opacity-100 shadow-lg" : "border-gray-200 hover:border-gray-300")}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h5 className="font-bold mb-1">{block.name}</h5>
+                          <p className="text-sm text-gray-600">{block.desc}</p>
                         </div>
-                        {block.phase === 2 ? <div className="absolute top-2 left-2 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> : null}
+                        <span className={"text-xs px-2 py-1 rounded-full " + (block.phase === 1 ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700")}>P{block.phase}</span>
                       </div>
-                    );
-                  })}
+                      {block.phase === 2 && <div className="absolute top-2 left-2 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>}
+                    </div>
+                  ))}
                 </div>
 
-                {showExt ? (
+                {showExt && (
                   <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <h5 className="font-bold text-yellow-800 mb-3">로직 확장 관리</h5>
                     <div className="space-y-2 text-sm">
@@ -184,9 +293,9 @@
                       <div className="flex items-center justify-between p-2 bg-gray-100 rounded"><span>AI 개인화 추천 로직</span><span className="text-gray-500">Phase 3 개발 예정</span></div>
                     </div>
                   </div>
-                ) : null}
+                )}
 
-                {selectedLogic ? (
+                {selectedLogic && (
                   <div className="mt-6 pt-6 border-t border-gray-200">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="text-lg font-bold">2단계: 적용 조건 설정 (고급 조건 빌더)</h4>
@@ -194,20 +303,20 @@
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                      {conditionBlocks.map(function(c){
-                        var disabled = (c.phase > currentPhase);
+                      {conditionBlocks.map(c => {
+                        const disabled = c.phase > currentPhase;
                         return (
                           <label key={c.id}
                                  className={"flex items-center p-3 border rounded-lg hover:bg-gray-50 relative " + (disabled ? "opacity-50 cursor-not-allowed" : "border-gray-200")}>
                             <input type="checkbox" className="mr-3"
                                    disabled={disabled}
-                                   onChange={function(e){ onToggleCondition(c, e.target.checked); }} />
+                                   onChange={e => toggle(c, e.target.checked)}/>
                             <div className="flex-1">
                               <span className="font-medium">{c.name}</span>
                               <p className="text-sm text-gray-500">{c.desc}</p>
                             </div>
                             <span className={"text-xs px-2 py-1 rounded-full " + (c.phase === 1 ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700")}>P{c.phase}</span>
-                            {c.phase === 2 ? <div className="absolute top-2 right-8 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> : null}
+                            {c.phase === 2 && <div className="absolute top-2 right-8 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>}
                           </label>
                         );
                       })}
@@ -217,21 +326,19 @@
                       "월 3회 이상 + 금요일 + VIP 고객 + 카테고리 제외" 같은 복잡한 조건도 AND/OR 로직으로 설정 가능
                     </div>
                   </div>
-                ) : null}
+                )}
 
-                {selectedLogic ? (
+                {selectedLogic && (
                   <div className="mt-6 pt-6 border-t border-gray-200">
                     <h4 className="text-lg font-bold mb-4">3단계: API 호출 미리보기</h4>
-                    <pre className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-auto">
-{JSON.stringify({
-  type: selectedLogic ? selectedLogic.id : null,
-  name: selectedLogic ? selectedLogic.name : null,
-  phase: selectedLogic ? selectedLogic.phase : null,
-  conditions: selectedConditions.map(function(x){ return { id: x.id, phase: x.phase }; })
-}, null, 2)}
-                    </pre>
+                    <pre className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-auto">{JSON.stringify({
+                      type: selectedLogic.id,
+                      name: selectedLogic.name,
+                      phase: selectedLogic.phase,
+                      conditions: selectedConditions.map(x => ({ id: x.id, phase: x.phase }))
+                    }, null, 2)}</pre>
                   </div>
-                ) : null}
+                )}
               </div>
 
               <div className="space-y-4">
@@ -251,8 +358,111 @@
         );
       }
 
-      function App(){
-        var _useState = useState("dashboard"), activeTab = _useState[0], setActiveTab = _useState[1];
+      function Analytics() {
+        return (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-xl font-bold mb-6">심화 분석</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-lg font-semibold mb-4">A/B 테스트 결과</h4>
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium">10% vs 15% 할인</span>
+                    <span className="text-green-600 font-bold">15% 승리</span>
+                  </div>
+                  <div className="text-sm text-gray-600">전환율 차이: +2.3%p | 통계적 유의성: 95%</div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-lg font-semibold mb-4">ROI 분석</h4>
+                <div style={{width:"100%", height:200}}>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <RBarChart data={[
+                      { service: "결제", roi: 320 },
+                      { service: "카드", roi: 280 },
+                      { service: "증권", roi: 450 },
+                      { service: "멤버십", roi: 180 },
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="service" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="roi" fill="#F59E0B" />
+                    </RBarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      function Settlement() {
+        return (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-xl font-bold mb-6">정산 관리</h3>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[
+                  { title:"이번달 총 지출", value:"12.8억원", sub:"전월 대비 +8.2%" },
+                  { title:"예상 절약액", value:"4.2억원", sub:"통합 플랫폼 효과", cls:"text-green-600" },
+                  { title:"정산 대기", value:"23건", sub:"자동 처리 예정", cls:"text-orange-600" }
+                ].map((it, i) => (
+                  <div key={i} className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="font-semibold mb-2">{it.title}</h4>
+                    <p className={"text-2xl font-bold " + (it.cls || "text-gray-900")}>{it.value}</p>
+                    <p className="text-sm text-gray-500">{it.sub}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <h4 className="text-lg font-semibold mb-4">서비스별 정산 현황</h4>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">서비스</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">이번달 지출</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">예산 대비</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">상태</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {[
+                        { service: "결제", spent: "4.2억", ratio: "84%", status: "normal" },
+                        { service: "카드", spent: "3.1억", ratio: "92%", status: "warning" },
+                        { service: "증권", spent: "2.8억", ratio: "70%", status: "normal" },
+                        { service: "멤버십", spent: "2.7억", ratio: "108%", status: "over" }
+                      ].map((row, i) => {
+                        const cls = row.status === "normal"
+                          ? "bg-green-100 text-green-800"
+                          : (row.status === "warning" ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800");
+                        return (
+                          <tr key={i}>
+                            <td className="px-6 py-4 whitespace-nowrap font-medium">{row.service}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{row.spent}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{row.ratio}</td>
+                            <td className="px-6 py-4 whitespace-nowrap"><span className={"px-2 py-1 rounded-full text-xs " + cls}>
+                              {row.status === "normal" ? "정상" : (row.status === "warning" ? "주의" : "초과")}
+                            </span></td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // --------- 공통 레이아웃 + 네비게이션 ---------
+      function Layout() {
+        const location = useLocation();
+        const active = (path) => location.pathname.replace(/^\/paycenter-demo/, "") === path;
 
         return (
           <div className="min-h-screen bg-gray-100">
@@ -276,258 +486,52 @@
 
               <div className="px-6">
                 <nav className="flex space-x-8">
-                  {[
-                    { id: "dashboard", name: "대시보드" },
-                    { id: "benefits",  name: "혜택 관리" },
-                    { id: "create",    name: "혜택 만들기" },
-                    { id: "analytics", name: "분석" },
-                    { id: "settlement",name: "정산" }
-                  ].map(function(tab){
-                    return (
-                      <button key={tab.id}
-                              onClick={function(){ setActiveTab(tab.id); }}
-                              className={"py-3 px-1 border-b-2 font-medium text-sm " + (activeTab === tab.id ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700")}>
-                        {tab.name}
-                      </button>
-                    );
-                  })}
+                  <Link to="" className={"py-3 px-1 border-b-2 font-medium text-sm " + (active("") ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700")}>대시보드</Link>
+                  <Link to="benefits" className={"py-3 px-1 border-b-2 font-medium text-sm " + (active("/benefits") ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700")}>혜택 관리</Link>
+                  <Link to="create" className={"py-3 px-1 border-b-2 font-medium text-sm " + (active("/create") ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700")}>혜택 만들기</Link>
+                  <Link to="analytics" className={"py-3 px-1 border-b-2 font-medium text-sm " + (active("/analytics") ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700")}>분석</Link>
+                  <Link to="settlement" className={"py-3 px-1 border-b-2 font-medium text-sm " + (active("/settlement") ? "border-amber-500 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700")}>정산</Link>
                 </nav>
               </div>
             </header>
 
             <main className="px-6 py-6">
-              {activeTab === "dashboard" ? (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[
-                      ["활성 혜택", "12", "play", "icon-green", "bg-green-100"],
-                      ["월 예산 소진율", "73%", "bar-chart-3", "icon-orange", "bg-orange-100"],
-                      ["평균 전환율", "9.2%", "line-chart", "icon-blue", "bg-blue-100"],
-                      ["이번달 절약", "4.2억", "download", "icon-purple", "bg-purple-100"]
-                    ].map(function(row, i){
-                      return (
-                        <div key={i} className="bg-white rounded-lg shadow p-6">
-                          <div className="flex items-center">
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-600">{row[0]}</p>
-                              <p className="text-2xl font-bold text-gray-900">{row[1]}</p>
-                            </div>
-                            <div className={"w-8 h-8 rounded-lg flex items-center justify-center " + row[4]}>
-                              {ico(row[2], "icon " + row[3])}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white rounded-lg shadow p-6">
-                      <h3 className="text-lg font-semibold mb-4">월별 혜택 성과</h3>
-                      <div style={{ width: "100%", height: 300 }}>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <RLineChart data={performanceData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="month" />
-                            <YAxis />
-                            <Tooltip />
-                            <Line type="monotone" dataKey="발급" stroke="#4CAF50" strokeWidth={2} />
-                            <Line type="monotone" dataKey="사용" stroke="#2196F3" strokeWidth={2} />
-                          </RLineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow p-6">
-                      <h3 className="text-lg font-semibold mb-4">서비스별 혜택 사용 분포</h3>
-                      <div style={{ width: "100%", height: 300 }}>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <PieChart>
-                            <Pie data={serviceDistribution} cx="50%" cy="50%" outerRadius={80} dataKey="value"
-                                 label={function(p){ return p.name + " " + p.value + "%"; }}>
-                              {serviceDistribution.map(function(e, i){ return <Cell key={i} fill={e.color} />; })}
-                            </Pie>
-                            <Tooltip />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-
-              {activeTab === "benefits" ? (
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-4">
-                      {ico("filter", "icon icon-gray")}
-                      <select className="border border-gray-300 rounded-lg px-3 py-2">
-                        <option>전체 상태</option><option>진행중</option><option>일시정지</option><option>예약됨</option>
-                      </select>
-                      <select className="border border-gray-300 rounded-lg px-3 py-2">
-                        <option>전체 서비스</option><option>결제</option><option>카드</option><option>증권</option>
-                      </select>
-                    </div>
-                    <button onClick={function(){ setActiveTab("create"); }}
-                            className="flex items-center space-x-2 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600">
-                      {ico("plus", "icon")}
-                      <span>새 혜택</span>
-                    </button>
-                  </div>
-
-                  <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">혜택명</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">예산 사용률</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">전환율</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {benefitData.map(function(b, i){
-                          return (
-                            <tr key={i} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div>
-                                  <div className="text-sm font-medium text-gray-900">{b.name}</div>
-                                  <div className="text-sm text-gray-500">{b.type}</div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={b.status} /></td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <div className="flex-1">
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                      <div className="bg-amber-600 h-2 rounded-full" style={{ width: (b.used / b.budget * 100) + "%" }}></div>
-                                    </div>
-                                  </div>
-                                  <span className="ml-2 text-sm text-gray-500">{Math.round(b.used / b.budget * 100)}%</span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{b.conversion}%</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                <button className="text-amber-600 hover:text-amber-900">{ico("eye", "icon")}</button>
-                                <button className="text-gray-600 hover:text-gray-900">{ico("edit-3", "icon")}</button>
-                                <button className="text-yellow-600 hover:text-yellow-900">{ico("pause", "icon")}</button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ) : null}
-
-              {activeTab === "create" ? <BenefitCreator /> : null}
-
-              {activeTab === "analytics" ? (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-xl font-bold mb-6">심화 분석</h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="text-lg font-semibold mb-4">A/B 테스트 결과</h4>
-                      <div className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-medium">10% vs 15% 할인</span>
-                          <span className="text-green-600 font-bold">15% 승리</span>
-                        </div>
-                        <div className="text-sm text-gray-600">전환율 차이: +2.3%p | 통계적 유의성: 95%</div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-lg font-semibold mb-4">ROI 분석</h4>
-                      <div style={{ width: "100%", height: 200 }}>
-                        <ResponsiveContainer width="100%" height={200}>
-                          <RBarChart data={[
-                            { service: "결제", roi: 320 },
-                            { service: "카드", roi: 280 },
-                            { service: "증권", roi: 450 },
-                            { service: "멤버십", roi: 180 }
-                          ]}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="service" />
-                            <YAxis />
-                            <Tooltip />
-                            <Bar dataKey="roi" fill="#F59E0B" />
-                          </RBarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-
-              {activeTab === "settlement" ? (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-xl font-bold mb-6">정산 관리</h3>
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {[
-                        { title:"이번달 총 지출", value:"12.8억원", sub:"전월 대비 +8.2%" },
-                        { title:"예상 절약액", value:"4.2억원", sub:"통합 플랫폼 효과", cls:"text-green-600" },
-                        { title:"정산 대기", value:"23건", sub:"자동 처리 예정", cls:"text-orange-600" }
-                      ].map(function(it, i){
-                        return (
-                          <div key={i} className="border border-gray-200 rounded-lg p-4">
-                            <h4 className="font-semibold mb-2">{it.title}</h4>
-                            <p className={"text-2xl font-bold " + (it.cls || "text-gray-900")}>{it.value}</p>
-                            <p className="text-sm text-gray-500">{it.sub}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <div>
-                      <h4 className="text-lg font-semibold mb-4">서비스별 정산 현황</h4>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">서비스</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">이번달 지출</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">예산 대비</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">상태</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-200">
-                            {[
-                              { service: "결제", spent: "4.2억", ratio: "84%", status: "normal" },
-                              { service: "카드", spent: "3.1억", ratio: "92%", status: "warning" },
-                              { service: "증권", spent: "2.8억", ratio: "70%", status: "normal" },
-                              { service: "멤버십", spent: "2.7억", ratio: "108%", status: "over" }
-                            ].map(function(row, i){
-                              var cls = row.status === "normal"
-                                ? "bg-green-100 text-green-800"
-                                : (row.status === "warning" ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800");
-                              return (
-                                <tr key={i}>
-                                  <td className="px-6 py-4 whitespace-nowrap font-medium">{row.service}</td>
-                                  <td className="px-6 py-4 whitespace-nowrap">{row.spent}</td>
-                                  <td className="px-6 py-4 whitespace-nowrap">{row.ratio}</td>
-                                  <td className="px-6 py-4 whitespace-nowrap"><span className={"px-2 py-1 rounded-full text-xs " + cls}>
-                                    {row.status === "normal" ? "정상" : (row.status === "warning" ? "주의" : "초과")}
-                                  </span></td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
+              <Outlet />
             </main>
           </div>
         );
       }
 
-      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+      // --------- 딥링크 복원 (404.html에서 ?p= 경유) ---------
+      (function restoreDeepLinkIfNeeded() {
+        const url = new URL(window.location.href);
+        const p = url.searchParams.get("p");
+        if (p) {
+          // 404.html에서 전달된 원래 경로로 주소 교체
+          history.replaceState(null, "", p);
+        }
+      })();
+
+      // --------- 라우터 구성 (중요: basename에 저장소명, 후행 슬래시 없음) ---------
+      function AppRouter() {
+        return (
+          <BrowserRouter basename="/paycenter-demo">
+            <Routes>
+              <Route element={<Layout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="benefits" element={<Benefits />} />
+                <Route path="create" element={<BenefitCreator />} />
+                <Route path="analytics" element={<Analytics />} />
+                <Route path="settlement" element={<Settlement />} />
+                {/* 알 수 없는 경로는 루트로 */}
+                <Route path="*" element={<Navigate to="." replace />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<AppRouter />);
     </script>
   </body>
 </html>
