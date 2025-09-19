@@ -14,6 +14,9 @@
         .phase-indicator {
             animation: pulse 2s infinite;
         }
+        .logic-block {
+            transition: all 0.2s ease;
+        }
         .logic-block:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -23,6 +26,12 @@
             border-color: #f59e0b !important;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
         }
     </style>
 </head>
@@ -67,9 +76,9 @@
     <!-- 메인 컨텐츠 -->
     <main class="px-6 py-6">
         <!-- 대시보드 탭 -->
-        <div id="dashboard-content" class="tab-content">
+        <div id="dashboard-content" class="tab-content active">
             <!-- 요약 카드 -->
-            <div class="grid grid-cols-4 gap-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <div class="bg-white rounded-lg shadow p-6">
                     <div class="flex items-center">
                         <div class="flex-1">
@@ -128,23 +137,22 @@
             </div>
             
             <!-- 차트 섹션 -->
-            <div class="grid grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-lg font-semibold mb-4">월별 혜택 성과</h3>
-                    <canvas id="performanceChart" width="400" height="200"></canvas>
+                    <canvas id="performanceChart"></canvas>
                 </div>
                 
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-lg font-semibold mb-4">서비스별 혜택 사용 분포</h3>
-                    <canvas id="distributionChart" width="400" height="200"></canvas>
+                    <canvas id="distributionChart"></canvas>
                 </div>
             </div>
         </div>
 
         <!-- 혜택 관리 탭 -->
-        <div id="benefits-content" class="tab-content hidden">
-            <!-- 필터 및 액션 바 -->
-            <div class="flex justify-between items-center mb-6">
+        <div id="benefits-content" class="tab-content">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div class="flex items-center space-x-4">
                     <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
@@ -163,7 +171,7 @@
                     </select>
                 </div>
                 
-                <button class="create-benefit-btn flex items-center space-x-2 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600">
+                <button class="create-benefit-btn flex items-center space-x-2 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
@@ -171,32 +179,32 @@
                 </button>
             </div>
 
-            <!-- 혜택 테이블 -->
             <div class="bg-white rounded-lg shadow overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">혜택명</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">예산 사용률</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">전환율</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200" id="benefits-table-body">
-                        <!-- JavaScript로 동적 생성 -->
-                    </tbody>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">혜택명</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">예산 사용률</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">전환율</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="benefits-table-body">
+                            <!-- JavaScript로 동적 생성 -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- 혜택 만들기 탭 -->
-        <div id="create-content" class="tab-content hidden">
-            <!-- 혜택 로직 라이브러리 안내 -->
+        <div id="create-content" class="tab-content">
             <div class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-6 border border-yellow-200 mb-6">
                 <h3 class="text-xl font-bold mb-2 text-gray-800">혜택 로직 라이브러리 - "확장 가능한 레고블록" 방식</h3>
                 <p class="text-gray-700 mb-4">미리 구현된 혜택 로직을 조합하여 복잡한 혜택도 간단하게 생성 (지속적 확장 지원)</p>
-                <div class="flex items-center text-sm space-x-4">
+                <div class="flex flex-wrap items-center text-sm gap-4">
                     <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full">기존: 4주 개발</span>
                     <span>→</span>
                     <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full">페이센터: 5분 완성</span>
@@ -204,10 +212,9 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-3 gap-6">
-                <!-- 기본 로직 선택 -->
-                <div class="col-span-2 bg-white rounded-lg shadow-lg p-6">
-                    <div class="flex items-center justify-between mb-4">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
                         <h4 class="text-lg font-bold">1단계: 기본 혜택 로직 선택</h4>
                         <div class="flex items-center space-x-2">
                             <div class="flex items-center text-xs">
@@ -218,18 +225,17 @@
                                 <div class="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
                                 <span>Phase 2</span>
                             </div>
-                            <button id="extension-toggle" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded">
+                            <button id="extension-toggle" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded transition-colors">
                                 확장 관리
                             </button>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3" id="logic-blocks-container">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="logic-blocks-container">
                         <!-- JavaScript로 동적 생성 -->
                     </div>
 
-                    <!-- 확장 관리 패널 -->
-                    <div id="extension-panel" class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg hidden">
+                    <div id="extension-panel" class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg" style="display: none;">
                         <h5 class="font-bold text-yellow-800 mb-3">로직 확장 관리</h5>
                         <div class="space-y-2 text-sm">
                             <div class="flex items-center justify-between p-2 bg-white rounded">
@@ -240,22 +246,21 @@
                                 <span>AI 개인화 추천 로직</span>
                                 <span class="text-gray-500">Phase 3 개발 예정</span>
                             </div>
-                            <button class="w-full mt-2 py-2 bg-amber-500 text-white rounded hover:bg-amber-600 font-medium">
+                            <button class="w-full mt-2 py-2 bg-amber-500 text-white rounded hover:bg-amber-600 font-medium transition-colors">
                                 새 로직 요청하기
                             </button>
                         </div>
                     </div>
 
-                    <!-- 조건 설정 -->
-                    <div id="conditions-section" class="mt-6 pt-6 border-t border-gray-200 hidden">
-                        <div class="flex items-center justify-between mb-4">
+                    <div id="conditions-section" class="mt-6 pt-6 border-t border-gray-200" style="display: none;">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
                             <h4 class="text-lg font-bold">2단계: 적용 조건 설정 (고급 조건 빌더)</h4>
                             <button class="text-sm text-amber-600 hover:text-amber-800 font-medium">
                                 고급 조건 빌더 열기
                             </button>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-4" id="condition-blocks-container">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="condition-blocks-container">
                             <!-- JavaScript로 동적 생성 -->
                         </div>
 
@@ -268,8 +273,7 @@
                         </div>
                     </div>
 
-                    <!-- API 호출 미리보기 -->
-                    <div id="api-preview-section" class="mt-6 pt-6 border-t border-gray-200 hidden">
+                    <div id="api-preview-section" class="mt-6 pt-6 border-t border-gray-200" style="display: none;">
                         <h4 class="text-lg font-bold mb-4">3단계: API 호출 미리보기</h4>
                         <div class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm">
                             <div class="mb-2">
@@ -283,7 +287,6 @@
                     </div>
                 </div>
 
-                <!-- 미리보기 및 생성 -->
                 <div class="space-y-4">
                     <div class="bg-white rounded-lg shadow-lg p-6">
                         <h4 class="text-lg font-bold mb-4">혜택 미리보기</h4>
@@ -298,7 +301,6 @@
                         </button>
                     </div>
 
-                    <!-- 확장 로드맵 -->
                     <div class="bg-white rounded-lg shadow-lg p-6">
                         <h4 class="text-lg font-bold mb-4">확장 로드맵</h4>
                         <div class="space-y-3 text-sm">
@@ -322,7 +324,6 @@
                         </div>
                     </div>
 
-                    <!-- 조합 예시 -->
                     <div class="bg-white rounded-lg shadow-lg p-6">
                         <h4 class="text-lg font-bold mb-4">고급 조합 예시</h4>
                         <div class="space-y-3 text-sm">
@@ -345,10 +346,10 @@
         </div>
 
         <!-- 분석 탭 -->
-        <div id="analytics-content" class="tab-content hidden">
+        <div id="analytics-content" class="tab-content">
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-xl font-bold mb-6">심화 분석</h3>
-                <div class="grid grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
                         <h4 class="text-lg font-semibold mb-4">A/B 테스트 결과</h4>
                         <div class="space-y-4">
@@ -366,18 +367,18 @@
                     
                     <div>
                         <h4 class="text-lg font-semibold mb-4">ROI 분석</h4>
-                        <canvas id="roiChart" width="400" height="200"></canvas>
+                        <canvas id="roiChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- 정산 탭 -->
-        <div id="settlement-content" class="tab-content hidden">
+        <div id="settlement-content" class="tab-content">
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-xl font-bold mb-6">정산 관리</h3>
                 <div class="space-y-6">
-                    <div class="grid grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="border border-gray-200 rounded-lg p-4">
                             <h4 class="font-semibold mb-2">이번달 총 지출</h4>
                             <p class="text-2xl font-bold text-gray-900">12.8억원</p>
@@ -403,13 +404,14 @@
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">서비스</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">이번달 지출</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">예산 대비</th>
+                                        <th class="px-6 py-
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">예산 대비</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">상태</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200" id="settlement-table-body">
-                                    <!-- JavaScript로 동적
-  </tbody>
+                                    <!-- JavaScript로 동적 생성 -->
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -420,10 +422,8 @@
 
     <script>
         // 전역 변수
-        let activeTab = 'dashboard';
         let selectedLogic = null;
         let selectedConditions = [];
-        let showExtensionPanel = false;
 
         // 샘플 데이터
         const benefitData = [
@@ -434,14 +434,14 @@
         ];
 
         const logicBlocks = [
-            { id: 'discount_percent', name: '정률 할인', desc: '10% 할인', color: 'bg-yellow-100 border-yellow-300', phase: 1 },
-            { id: 'discount_fixed', name: '정액 할인', desc: '2000원 할인', color: 'bg-yellow-100 border-yellow-300', phase: 1 },
-            { id: 'cashback', name: '캐시백', desc: '3% 적립', color: 'bg-yellow-100 border-yellow-300', phase: 1 },
-            { id: 'points', name: '포인트', desc: '포인트 적립/차감', color: 'bg-yellow-100 border-yellow-300', phase: 1 },
-            { id: 'coupon', name: '쿠폰 발급', desc: '할인쿠폰 자동 발급', color: 'bg-yellow-100 border-yellow-300', phase: 1 },
-            { id: 'fee_waiver', name: '수수료 면제', desc: '송금 수수료 면제', color: 'bg-yellow-100 border-yellow-300', phase: 1 },
-            { id: 'tier_discount', name: '등급별 할인', desc: '구매횟수별 차등 할인', color: 'bg-yellow-100 border-yellow-300', phase: 2 },
-            { id: 'bundle_discount', name: '묶음 할인', desc: '복합 서비스 이용 할인', color: 'bg-yellow-100 border-yellow-300', phase: 2 }
+            { id: 'discount_percent', name: '정률 할인', desc: '10% 할인', phase: 1 },
+            { id: 'discount_fixed', name: '정액 할인', desc: '2000원 할인', phase: 1 },
+            { id: 'cashback', name: '캐시백', desc: '3% 적립', phase: 1 },
+            { id: 'points', name: '포인트', desc: '포인트 적립/차감', phase: 1 },
+            { id: 'coupon', name: '쿠폰 발급', desc: '할인쿠폰 자동 발급', phase: 1 },
+            { id: 'fee_waiver', name: '수수료 면제', desc: '송금 수수료 면제', phase: 1 },
+            { id: 'tier_discount', name: '등급별 할인', desc: '구매횟수별 차등 할인', phase: 2 },
+            { id: 'bundle_discount', name: '묶음 할인', desc: '복합 서비스 이용 할인', phase: 2 }
         ];
 
         const conditionBlocks = [
@@ -470,18 +470,14 @@
                 ended: { text: '종료', color: 'bg-gray-100 text-gray-800' }
             };
             const config = statusConfig[status];
-            return `<span class="px-2 py-1 rounded-full text-xs font-medium ${config.color}">${config.text}</span>`;
-        }
-
-        function formatCurrency(amount) {
-            return (amount / 100000000).toFixed(1) + '억원';
+            return '<span class="px-2 py-1 rounded-full text-xs font-medium ' + config.color + '">' + config.text + '</span>';
         }
 
         // 탭 관리
         function switchTab(tabName) {
             // 모든 탭 내용 숨기기
             document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
+                content.classList.remove('active');
             });
             
             // 모든 탭 버튼 비활성화
@@ -491,15 +487,14 @@
             });
             
             // 선택된 탭 활성화
-            document.getElementById(`${tabName}-content`).classList.remove('hidden');
-            document.querySelector(`[data-tab="${tabName}"]`).classList.add('tab-active');
-            document.querySelector(`[data-tab="${tabName}"]`).classList.remove('border-transparent', 'text-gray-500');
-            
-            activeTab = tabName;
+            document.getElementById(tabName + '-content').classList.add('active');
+            const activeButton = document.querySelector('[data-tab="' + tabName + '"]');
+            activeButton.classList.add('tab-active');
+            activeButton.classList.remove('border-transparent', 'text-gray-500');
             
             // 탭별 초기화
             if (tabName === 'dashboard') {
-                initCharts();
+                setTimeout(initCharts, 100);
             } else if (tabName === 'benefits') {
                 renderBenefitsTable();
             } else if (tabName === 'create') {
@@ -507,126 +502,124 @@
             } else if (tabName === 'settlement') {
                 renderSettlementTable();
             } else if (tabName === 'analytics') {
-                initROIChart();
+                setTimeout(initROIChart, 100);
             }
         }
 
         // 혜택 테이블 렌더링
         function renderBenefitsTable() {
             const tbody = document.getElementById('benefits-table-body');
-            tbody.innerHTML = benefitData.map((benefit, index) => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div>
-                            <div class="text-sm font-medium text-gray-900">${benefit.name}</div>
-                            <div class="text-sm text-gray-500">${benefit.type}</div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        ${getStatusBadge(benefit.status)}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                            <div class="flex-1">
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-amber-600 h-2 rounded-full" style="width: ${(benefit.used / benefit.budget) * 100}%"></div>
-                                </div>
-                            </div>
-                            <span class="ml-2 text-sm text-gray-500">
-                                ${Math.round((benefit.used / benefit.budget) * 100)}%
-                            </span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${benefit.conversion}%
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button class="text-amber-600 hover:text-amber-900">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                            </svg>
-                        </button>
-                        <button class="text-gray-600 hover:text-gray-900">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                        </button>
-                        <button class="text-yellow-600 hover:text-yellow-900">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = benefitData.map(function(benefit) {
+                const usagePercent = Math.round((benefit.used / benefit.budget) * 100);
+                return '<tr class="hover:bg-gray-50">' +
+                    '<td class="px-6 py-4 whitespace-nowrap">' +
+                        '<div>' +
+                            '<div class="text-sm font-medium text-gray-900">' + benefit.name + '</div>' +
+                            '<div class="text-sm text-gray-500">' + benefit.type + '</div>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td class="px-6 py-4 whitespace-nowrap">' +
+                        getStatusBadge(benefit.status) +
+                    '</td>' +
+                    '<td class="px-6 py-4 whitespace-nowrap">' +
+                        '<div class="flex items-center">' +
+                            '<div class="flex-1">' +
+                                '<div class="w-full bg-gray-200 rounded-full h-2">' +
+                                    '<div class="bg-amber-600 h-2 rounded-full" style="width: ' + usagePercent + '%"></div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<span class="ml-2 text-sm text-gray-500">' + usagePercent + '%</span>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">' + benefit.conversion + '%</td>' +
+                    '<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">' +
+                        '<div class="flex space-x-2">' +
+                            '<button class="text-amber-600 hover:text-amber-900">' +
+                                '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>' +
+                                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>' +
+                                '</svg>' +
+                            '</button>' +
+                            '<button class="text-gray-600 hover:text-gray-900">' +
+                                '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>' +
+                                '</svg>' +
+                            '</button>' +
+                            '<button class="text-yellow-600 hover:text-yellow-900">' +
+                                '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>' +
+                                '</svg>' +
+                            '</button>' +
+                        '</div>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
         }
 
         // 정산 테이블 렌더링
         function renderSettlementTable() {
             const tbody = document.getElementById('settlement-table-body');
-            tbody.innerHTML = settlementData.map(row => `
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap font-medium">${row.service}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${row.spent}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${row.ratio}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 rounded-full text-xs ${
-                            row.status === 'normal' ? 'bg-green-100 text-green-800' :
-                            row.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                        }">
-                            ${row.status === 'normal' ? '정상' : row.status === 'warning' ? '주의' : '초과'}
-                        </span>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = settlementData.map(function(row) {
+                let statusClass = 'bg-green-100 text-green-800';
+                let statusText = '정상';
+                if (row.status === 'warning') {
+                    statusClass = 'bg-yellow-100 text-yellow-800';
+                    statusText = '주의';
+                } else if (row.status === 'over') {
+                    statusClass = 'bg-red-100 text-red-800';
+                    statusText = '초과';
+                }
+                
+                return '<tr>' +
+                    '<td class="px-6 py-4 whitespace-nowrap font-medium">' + row.service + '</td>' +
+                    '<td class="px-6 py-4 whitespace-nowrap">' + row.spent + '</td>' +
+                    '<td class="px-6 py-4 whitespace-nowrap">' + row.ratio + '</td>' +
+                    '<td class="px-6 py-4 whitespace-nowrap">' +
+                        '<span class="px-2 py-1 rounded-full text-xs ' + statusClass + '">' + statusText + '</span>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
         }
 
         // 로직 블록 렌더링
         function renderLogicBlocks() {
             const container = document.getElementById('logic-blocks-container');
-            container.innerHTML = logicBlocks.map(block => `
-                <div class="logic-block p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md relative ${
-                    selectedLogic && selectedLogic.id === block.id 
-                        ? `selected-logic border-amber-500` 
-                        : 'border-gray-200 hover:border-gray-300'
-                }" data-logic-id="${block.id}">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <h5 class="font-bold mb-1">${block.name}</h5>
-                            <p class="text-sm text-gray-600">${block.desc}</p>
-                        </div>
-                        <span class="text-xs px-2 py-1 rounded-full ${
-                            block.phase === 1 ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                        }">
-                            P${block.phase}
-                        </span>
-                    </div>
-                    ${block.phase === 2 ? '<div class="absolute top-2 left-2 w-2 h-2 bg-green-500 rounded-full phase-indicator"></div>' : ''}
-                </div>
-            `).join('');
+            container.innerHTML = logicBlocks.map(function(block) {
+                const phaseClass = block.phase === 1 ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700';
+                const phaseIndicator = block.phase === 2 ? '<div class="absolute top-2 left-2 w-2 h-2 bg-green-500 rounded-full phase-indicator"></div>' : '';
+                
+                return '<div class="logic-block p-4 rounded-lg border-2 cursor-pointer border-gray-200 hover:border-gray-300 relative" data-logic-id="' + block.id + '">' +
+                    '<div class="flex items-start justify-between">' +
+                        '<div class="flex-1">' +
+                            '<h5 class="font-bold mb-1">' + block.name + '</h5>' +
+                            '<p class="text-sm text-gray-600">' + block.desc + '</p>' +
+                        '</div>' +
+                        '<span class="text-xs px-2 py-1 rounded-full ' + phaseClass + '">P' + block.phase + '</span>' +
+                    '</div>' +
+                    phaseIndicator +
+                '</div>';
+            }).join('');
 
             // 로직 블록 클릭 이벤트
-            document.querySelectorAll('.logic-block').forEach(block => {
+            document.querySelectorAll('.logic-block').forEach(function(block) {
                 block.addEventListener('click', function() {
                     const logicId = this.getAttribute('data-logic-id');
-                    selectedLogic = logicBlocks.find(l => l.id === logicId);
+                    selectedLogic = logicBlocks.find(function(l) { return l.id === logicId; });
                     
                     // 선택된 블록 스타일 업데이트
-                    document.querySelectorAll('.logic-block').forEach(b => {
-                        b.classList.remove('selected-logic', 'border-amber-500');
+                    document.querySelectorAll('.logic-block').forEach(function(b) {
+                        b.classList.remove('selected-logic');
                         b.classList.add('border-gray-200');
                     });
-                    this.classList.add('selected-logic', 'border-amber-500');
+                    this.classList.add('selected-logic');
                     this.classList.remove('border-gray-200');
                     
                     // 조건 섹션 표시
-                    document.getElementById('conditions-section').classList.remove('hidden');
+                    document.getElementById('conditions-section').style.display = 'block';
                     renderConditionBlocks();
                     
                     // API 미리보기 섹션 표시
-                    document.getElementById('api-preview-section').classList.remove('hidden');
+                    document.getElementById('api-preview-section').style.display = 'block';
                     updateAPIPreview();
                     
                     // 혜택 미리보기 업데이트
@@ -645,34 +638,33 @@
             const container = document.getElementById('condition-blocks-container');
             const currentPhase = 2;
             
-            container.innerHTML = conditionBlocks.map(condition => `
-                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 relative ${
-                    condition.phase > currentPhase ? 'opacity-50 cursor-not-allowed' : 'border-gray-200'
-                }" data-condition-id="${condition.id}">
-                    <input type="checkbox" class="mr-3" ${condition.phase > currentPhase ? 'disabled' : ''}>
-                    <div class="flex-1">
-                        <span class="font-medium">${condition.name}</span>
-                        <p class="text-sm text-gray-500">${condition.desc}</p>
-                    </div>
-                    <span class="text-xs px-2 py-1 rounded-full ${
-                        condition.phase === 1 ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                    }">
-                        P${condition.phase}
-                    </span>
-                    ${condition.phase === 2 ? '<div class="absolute top-2 right-8 w-2 h-2 bg-green-500 rounded-full phase-indicator"></div>' : ''}
-                </label>
-            `).join('');
+            container.innerHTML = conditionBlocks.map(function(condition) {
+                const disabled = condition.phase > currentPhase;
+                const phaseClass = condition.phase === 1 ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700';
+                const phaseIndicator = condition.phase === 2 ? '<div class="absolute top-2 right-8 w-2 h-2 bg-green-500 rounded-full phase-indicator"></div>' : '';
+                const labelClass = disabled ? 'opacity-50 cursor-not-allowed' : 'border-gray-200';
+                
+                return '<label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 relative ' + labelClass + '" data-condition-id="' + condition.id + '">' +
+                    '<input type="checkbox" class="mr-3"' + (disabled ? ' disabled' : '') + '>' +
+                    '<div class="flex-1">' +
+                        '<span class="font-medium">' + condition.name + '</span>' +
+                        '<p class="text-sm text-gray-500">' + condition.desc + '</p>' +
+                    '</div>' +
+                    '<span class="text-xs px-2 py-1 rounded-full ' + phaseClass + '">P' + condition.phase + '</span>' +
+                    phaseIndicator +
+                '</label>';
+            }).join('');
 
             // 조건 체크박스 이벤트
-            container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            container.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox) {
                 checkbox.addEventListener('change', function() {
                     const conditionId = this.closest('label').getAttribute('data-condition-id');
-                    const condition = conditionBlocks.find(c => c.id === conditionId);
+                    const condition = conditionBlocks.find(function(c) { return c.id === conditionId; });
                     
                     if (this.checked) {
                         selectedConditions.push(condition);
                     } else {
-                        selectedConditions = selectedConditions.filter(c => c.id !== conditionId);
+                        selectedConditions = selectedConditions.filter(function(c) { return c.id !== conditionId; });
                     }
                     
                     updateAPIPreview();
@@ -689,11 +681,9 @@
                     type: selectedLogic.id,
                     name: selectedLogic.name,
                     phase: selectedLogic.phase,
-                    conditions: selectedConditions.map(c => ({id: c.id, phase: c.phase}))
+                    conditions: selectedConditions.map(function(c) { return {id: c.id, phase: c.phase}; })
                 };
                 apiContent.textContent = JSON.stringify(apiData, null, 2);
-            } else {
-                apiContent.textContent = '로직을 선택해주세요';
             }
         }
 
@@ -701,25 +691,13 @@
         function updateBenefitPreview() {
             const preview = document.getElementById('benefit-preview');
             if (selectedLogic) {
-                const conditionsText = selectedConditions.map(c => c.desc).join(' + ');
-                const fullText = conditionsText ? `${conditionsText} → ${selectedLogic.desc}` : selectedLogic.desc;
+                const conditionsText = selectedConditions.map(function(c) { return c.desc; }).join(' + ');
+                const fullText = conditionsText ? conditionsText + ' → ' + selectedLogic.desc : selectedLogic.desc;
                 
-                preview.innerHTML = `
-                    <div class="text-center">
-                        <div class="font-semibold text-gray-900 mb-2">
-                            ${fullText}
-                        </div>
-                        <div class="text-sm text-gray-500">
-                            Phase ${selectedLogic.phase} 로직 조합
-                        </div>
-                    </div>
-                `;
-            } else {
-                preview.innerHTML = `
-                    <div class="text-gray-400 text-center">
-                        혜택 로직을 선택해주세요
-                    </div>
-                `;
+                preview.innerHTML = '<div class="text-center">' +
+                    '<div class="font-semibold text-gray-900 mb-2">' + fullText + '</div>' +
+                    '<div class="text-sm text-gray-500">Phase ' + selectedLogic.phase + ' 로직 조합</div>' +
+                '</div>';
             }
         }
 
@@ -727,8 +705,8 @@
         function initCharts() {
             // 성과 차트
             const performanceCtx = document.getElementById('performanceChart');
-            if (performanceCtx && !performanceCtx.chart) {
-                performanceCtx.chart = new Chart(performanceCtx, {
+            if (performanceCtx && !performanceCtx.chartInstance) {
+                performanceCtx.chartInstance = new Chart(performanceCtx.getContext('2d'), {
                     type: 'line',
                     data: {
                         labels: ['1월', '2월', '3월', '4월', '5월'],
@@ -737,20 +715,23 @@
                             data: [45000, 52000, 48000, 58000, 62000],
                             borderColor: '#4CAF50',
                             backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                            borderWidth: 2
+                            borderWidth: 2,
+                            tension: 0.4
                         }, {
                             label: '사용',
                             data: [38000, 44000, 42000, 51000, 56000],
                             borderColor: '#2196F3',
                             backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                            borderWidth: 2
+                            borderWidth: 2,
+                            tension: 0.4
                         }]
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'top',
+                                position: 'top'
                             }
                         },
                         scales: {
@@ -760,12 +741,13 @@
                         }
                     }
                 });
+                performanceCtx.style.height = '300px';
             }
 
             // 분포 차트
             const distributionCtx = document.getElementById('distributionChart');
-            if (distributionCtx && !distributionCtx.chart) {
-                distributionCtx.chart = new Chart(distributionCtx, {
+            if (distributionCtx && !distributionCtx.chartInstance) {
+                distributionCtx.chartInstance = new Chart(distributionCtx.getContext('2d'), {
                     type: 'pie',
                     data: {
                         labels: ['결제', '카드', '증권', '멤버십'],
@@ -776,21 +758,23 @@
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'right',
+                                position: 'right'
                             }
                         }
                     }
                 });
+                distributionCtx.style.height = '300px';
             }
         }
 
         // ROI 차트 초기화
         function initROIChart() {
             const roiCtx = document.getElementById('roiChart');
-            if (roiCtx && !roiCtx.chart) {
-                roiCtx.chart = new Chart(roiCtx, {
+            if (roiCtx && !roiCtx.chartInstance) {
+                roiCtx.chartInstance = new Chart(roiCtx.getContext('2d'), {
                     type: 'bar',
                     data: {
                         labels: ['결제', '카드', '증권', '멤버십'],
@@ -802,6 +786,7 @@
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         scales: {
                             y: {
                                 beginAtZero: true
@@ -809,13 +794,14 @@
                         }
                     }
                 });
+                roiCtx.style.height = '300px';
             }
         }
 
-        // 이벤트 리스너 설정
+        // 페이지 로드 후 초기화
         document.addEventListener('DOMContentLoaded', function() {
             // 탭 버튼 이벤트
-            document.querySelectorAll('.tab-button').forEach(button => {
+            document.querySelectorAll('.tab-button').forEach(function(button) {
                 button.addEventListener('click', function() {
                     const tabName = this.getAttribute('data-tab');
                     switchTab(tabName);
@@ -830,20 +816,20 @@
             // 확장 관리 토글 이벤트
             document.getElementById('extension-toggle').addEventListener('click', function() {
                 const panel = document.getElementById('extension-panel');
-                showExtensionPanel = !showExtensionPanel;
-                panel.classList.toggle('hidden', !showExtensionPanel);
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
             });
 
             // 혜택 생성 버튼 이벤트
             document.getElementById('create-benefit-final').addEventListener('click', function() {
                 if (selectedLogic) {
                     alert('혜택이 성공적으로 생성되었습니다!');
-                    // 실제로는 여기서 API 호출을 수행
                 }
             });
 
-            // 초기 탭 설정
-            switchTab('dashboard');
+            // 초기 탭 설정 및 차트 초기화
+            setTimeout(function() {
+                initCharts();
+            }, 100);
         });
     </script>
 </body>
